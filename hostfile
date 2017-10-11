@@ -1,0 +1,127 @@
+#!/bin/bash
+
+#####################################################################
+## Simple script for listing, adding and removing hostfile entries ##
+##                                                                 ##
+## Kevin Bentlage <kevin@bentlage.nu>                              ##
+#####################################################################
+
+# Host File
+hostFile="/etc/hosts"
+
+# Usage
+# Printing usage information
+function usage {
+    echo -e "\nUsage"
+    echo -e "List           \t hostfile -l";
+    echo -e "Add entry      \t hostfile -a <hostname> <ip>";
+    echo -e "Remove entry   \t hostfile -r <hostname>";
+}
+
+# Show Help
+# Show help and usage information
+function showHelp {
+    usage
+    exit
+}
+
+# List Entries
+# List all entries in hostfile
+function listEntries {
+    cat "$hostFile"
+}
+
+# Add Entry
+# Add new entry to hostfile when it not present yet
+function addEntry {
+
+    # Prepare line
+    hostLine="$ip\t$hostname\t# Added on $(date +'%m-%d-%Y')"
+    
+    if [ -n "$(grep $hostname $hostFile)" ]
+    then
+        echo -e "$hostname already exists:\n\n$(grep $hostname $hostFile)"
+    else
+        echo "Adding $hostname to $hostFile";
+        sudo sh -c -e "echo '$hostLine' >> $hostFile";
+        if [ -n "$(grep $hostname $hostFile)" ]
+        then
+            echo -e "$hostname was succesfully added\n\n$(grep $hostname $hostFile)";
+        else
+            echo "Failed to add $hostname, Try again!";
+        fi
+    fi
+}
+
+# Remove Entry
+# Removes entry from hostfile if exists
+function removeEntry {
+    echo "Removing hostfile entry";
+    
+    if [ -n "$(grep $hostname $hostFile)" ]
+    then
+        echo "$hostname found in $hostFile, Removing now...";
+        sudo sed -i ".bak" "/$hostname/d" $hostFile
+    else
+        echo "$hostname was not found in $hostFile";
+    fi
+}
+
+# Catch attributes
+while getopts ":a:r:l" opt;
+  do
+    case $opt in
+      l)
+        action="L"
+      ;;
+      a)
+        action="A"
+        hostname=$OPTARG
+        eval "ip=\${$OPTIND}"
+        shift 2
+      ;;
+      r)
+        action="R"
+        hostname=$OPTARG
+      ;;
+      \?)
+        echo -e "Invalid option: -$OPTARG"
+        showHelp
+      ;;
+    esac
+done
+
+# When no action is given, show help
+if [ -z $action ]; then
+  showHelp
+fi
+
+# List action
+if [ $action == "L" ]; then
+  listEntries
+  exit
+fi
+
+# Add action
+if [ $action == "A" ]; then
+  if [ -z $hostname ]; then
+    echo -e "Missing argument: <hostname>"
+    showHelp
+  fi
+  if [ -z $ip ]; then
+    echo -e "Missing argument: <ip>"
+    showHelp 
+  fi
+  addEntry
+  exit
+fi
+
+# Remove action
+if [ $action == "R" ]; then
+  if [ -z $hostname ]; then
+    echo -e "Missing argument: <hostname>"
+    showHelp
+  fi
+  removeEntry
+  exit
+fi
