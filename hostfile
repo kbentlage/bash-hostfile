@@ -13,9 +13,10 @@ hostFile="/etc/hosts"
 # Printing usage information
 function usage {
     echo -e "\nUsage"
-    echo -e "List           \t hostfile -l";
     echo -e "Add entry      \t hostfile -a <hostname> <ip>";
     echo -e "Remove entry   \t hostfile -r <hostname>";
+    echo -e "List           \t hostfile -l";
+    echo -e "Edit hostfile  \t hostfile -e";
 }
 
 # Show Help
@@ -67,8 +68,14 @@ function removeEntry {
     fi
 }
 
+# Edit Entries
+# Edit entries in hostfile
+function editEntries {
+    sudo vi "$hostFile"
+}
+
 # Catch attributes
-while getopts ":a:r:l" opt;
+while getopts ":a:r:l:e" opt;
   do
     case $opt in
       l)
@@ -83,6 +90,9 @@ while getopts ":a:r:l" opt;
       r)
         action="R"
         hostname=$OPTARG
+      ;;
+      e)
+        action="E"
       ;;
       \?)
         echo -e "Invalid option: -$OPTARG"
@@ -123,5 +133,11 @@ if [ $action == "R" ]; then
     showHelp
   fi
   removeEntry
+  exit
+fi
+
+# Edit action
+if [ $action == "E" ]; then
+  editEntries
   exit
 fi
