@@ -75,7 +75,7 @@ function editEntries {
 }
 
 # Catch attributes
-while getopts ":a:r:l:e" opt;
+while getopts "a:r:le" opt;
   do
     case $opt in
       l)
